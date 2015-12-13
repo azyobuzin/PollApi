@@ -1,0 +1,133 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>投票ツイート情報を取得するAPI</title>
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.3/css/materialize.min.css" media="screen,projection" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        html {
+            font-family: Meiryo, Roboto, sans-serif;
+        }
+        pre {
+            border: 1px solid gray;
+            border-radius: 2px;
+            padding: 3px;
+            background-color: ghostwhite;
+            overflow-x: auto;
+            font-family: Consolas, 'MS Gothic', monospace;
+        }
+        #btn-try {
+            width: 100%;
+        }
+        #preloader, #result {
+            display: none;
+        }
+        footer {
+            line-height: 50px;
+        }
+    </style>
+</head>
+<body>
+    <header class="section no-pad-bot light-blue lighten-1 z-depth-1">
+        <div class="container section">
+            <h2 class="header center white-text">投票ツイート情報を取得するAPI</h2>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="section">
+            <h4>とりあえず試してみる</h4>
+            <form id="form-try" action="#">
+                <div class="row">
+                    <div class="input-field col s12">
+                        <input id="statusid" type="number" class="validate">
+                        <label for="statusid">ツイートID</label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col l3 offset-l9 m4 offset-m8 s12">
+                        <button id="btn-try" class="btn waves-effect waves-light" type="submit">
+                            実行
+                            <i class="material-icons right">send</i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div id="preloader" class="center">
+                <div class="preloader-wrapper big active">
+                    <div class="spinner-layer spinner-blue-only">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div><div class="gap-patch">
+                            <div class="circle"></div>
+                        </div><div class="circle-clipper right">
+                            <div class="circle"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="result" class="card">
+                <div class="card">
+                    <div class="card-content">
+                        <ul id="result-choices" class="collection">
+                            <li class="collection-item">選択肢</li>
+                        </ul>
+                        <div><span id="result-endtime">2015/12/13 20:45:48</span> まで</div>
+                    </div>
+                    <div class="card-action">
+                        <a id="result-link" href="#">ツイートを表示</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h4>使い方</h4>
+            <pre>https://azyobuzin-twpollapi.azurewebsites.net/v1/ツイートID</pre>
+            にアクセスすると、 JSON が返って来ます。例えばこんな感じ
+            <pre>{
+    choice_count: 4,
+    end_time: "2015-12-14T06:43:09Z",
+    tweet_id: "675928931250253824",
+    choices: ["🍤", "🍆", "✊", "✋"]
+}</pre>
+            簡単ですね。あんまり大量に叩くと Azure や Twitter に怒られかねないので、常識の範囲内でお願いします。
+        </section>
+    </div>
+
+
+    <footer class="page-footer light-blue grey-text text-lighten-3">
+        <div class="container">Contact: Twitter @azyobuzin</div>
+    </footer>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.3/js/materialize.min.js"></script>
+
+    <script>
+        $("#form-try").on("submit", function () {
+            $("#result").fadeOut("fast", function () { $("#preloader").fadeIn("fast"); });
+            $.getJSON("v1/" + $("#statusid").val())
+                .done(function (value) {
+                    $("#result-choices li").remove();
+                    $("#result-choices").append(
+                        value.choices.map(function (choice) {
+                            return $("<li></li>", { "class": "collection-item" }).text(choice);
+                        })
+                    );
+                    $("#result-endtime").text(new Date(value.end_time).toLocaleString());
+                    $("#result-link").attr("href", "https://twitter.com/twitter/status/" + value.tweet_id);
+                    $("#preloader").fadeOut("fast", function () { $("#result").fadeIn("fast"); });
+                })
+                .fail(function () {
+                    $("#preloader").fadeOut("fast");
+                    Materialize.toast("Failed", 4000);
+                });
+            return false;
+        });
+    </script>
+</body>
+</html>
