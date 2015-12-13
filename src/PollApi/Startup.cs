@@ -31,7 +31,6 @@ namespace PollApi
         {
             services.AddApplicationInsightsTelemetry(Configuration);
             services.AddCaching();
-            services.AddSingleton(typeof(MyCacheService));
 
             services.AddMvc();
         }
