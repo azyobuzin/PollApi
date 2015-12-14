@@ -44,9 +44,9 @@ namespace PollApi
             app.UseIISPlatformHandler();
 
             app.UseApplicationInsightsRequestTelemetry();
+            app.UseDeveloperExceptionPage();
             app.UseApplicationInsightsExceptionTelemetry();
 
-            app.UseDeveloperExceptionPage();
             app.UseDefaultFiles().UseStaticFiles();
 
             app.UseMvc();
