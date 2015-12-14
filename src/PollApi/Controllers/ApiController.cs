@@ -47,6 +47,13 @@ namespace PollApi.Controllers
             }
 
             var detailedPollInfo = await this.GetPollInfo(id).ConfigureAwait(false);
+
+            if (detailedPollInfo == null)
+            {
+                this._cache.Set(id, null, s_defaultOptions);
+                goto NotFound;
+            }
+
             pollInfo = detailedPollInfo.ToPollInfo();
 
             this._cache.Set(id, pollInfo, s_defaultOptions);
