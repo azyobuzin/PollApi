@@ -184,9 +184,10 @@
                     $("#preloader").fadeOut("fast").promise()
                         .then(function () { return $("#result").fadeIn("fast").promise(); })
                         .done(function () {
-                            var $p = $("#result-choices .determinate");
-                            for (var i = 0; i < value.percentages.length; i++) {
-                                $p.get(i).style.width = value.percentages[i] + "%";
+                            if (value.percentages != null) {
+                                var $p = $("#result-choices .determinate");
+                                for (var i = 0; i < value.percentages.length; i++)
+                                    $p.get(i).style.width = value.percentages[i] + "%";
                             }
                         });
                 })
