@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
+using Microsoft.AspNet.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -21,7 +22,7 @@ namespace PollApi
             }
 
             builder.AddEnvironmentVariables();
-            Configuration = builder.Build().ReloadOnChanged("appsettings.json");
+            this.Configuration = builder.Build().ReloadOnChanged("appsettings.json");
         }
 
         public IConfigurationRoot Configuration { get; set; }
@@ -29,19 +30,22 @@ namespace PollApi
         // This method gets called by the runtime. Use this method to add services to the container
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddApplicationInsightsTelemetry(Configuration);
+            services.AddApplicationInsightsTelemetry(this.Configuration);
             services.AddCaching();
-
+            services.AddCors();
             services.AddMvc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
+            loggerFactory.AddConsole(env.IsDevelopment() ? LogLevel.Information : LogLevel.Warning);
             loggerFactory.AddDebug();
 
-            app.UseIISPlatformHandler();
+            app.UseOverrideHeaders(new OverrideHeaderMiddlewareOptions
+            {
+                ForwardedOptions = ForwardedHeaders.All
+            });
 
             app.UseApplicationInsightsRequestTelemetry();
             app.UseDeveloperExceptionPage();
@@ -49,6 +53,7 @@ namespace PollApi
 
             app.UseDefaultFiles().UseStaticFiles();
 
+            app.UseCors(builder => builder.AllowAnyOrigin().WithMethods("GET"));
             app.UseMvc();
         }
 
