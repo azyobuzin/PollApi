@@ -44,7 +44,6 @@ namespace PollApi
             app.UseIISPlatformHandler();
 
             app.UseApplicationInsightsRequestTelemetry();
-            app.UseMiddleware<SetContentLengthMiddleware>();
             app.UseDeveloperExceptionPage();
             app.UseApplicationInsightsExceptionTelemetry();
 
