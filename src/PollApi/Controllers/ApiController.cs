@@ -42,23 +42,26 @@ namespace PollApi.Controllers
                 if (pollInfo == null)
                     goto NotFound;
 
-                if (!detailed)
+                // 終了済み投票
+                if (pollInfo.is_open == "false")
                     return this.Json(pollInfo);
+
+                // detailed でないなら必要なデータだけ返す
+                // 投票期間が終了しているなら再取得
+                if (!detailed && pollInfo.EndTimeDateTime > DateTimeOffset.UtcNow)
+                    return this.Json(pollInfo.GetInvariantData());
             }
 
-            var detailedPollInfo = await this.GetPollInfo(id).ConfigureAwait(false);
+            pollInfo = await this.GetPollInfo(id).ConfigureAwait(false);
 
-            if (detailedPollInfo == null)
+            if (pollInfo == null)
             {
                 this._cache.Set(id, null, s_defaultOptions);
                 goto NotFound;
             }
 
-            pollInfo = detailedPollInfo.ToPollInfo();
-
             this._cache.Set(id, pollInfo, s_defaultOptions);
-
-            return this.Json(detailed ? detailedPollInfo : pollInfo);
+            return this.Json(pollInfo);
 
             NotFound:
             return this.HttpNotFound("Not a poll tweet.");
@@ -71,7 +74,14 @@ namespace PollApi.Controllers
             return int.Parse(m.Value, CultureInfo.InvariantCulture);
         }
 
-        private async Task<DetailedPollInfo> GetPollInfo(ulong id)
+        private class TwitterCardsSerialization
+        {
+#pragma warning disable 649
+            public PollInfo card;
+#pragma warning restore 649
+        }
+
+        private async Task<PollInfo> GetPollInfo(ulong id)
         {
             string html;
             using (var client = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate }))
@@ -97,12 +107,13 @@ namespace PollApi.Controllers
             var dom = new HtmlParser().Parse(html);
 
             var cardInfoJson = ((IHtmlScriptElement)dom.QuerySelector("script[type=\"text/twitter-cards-serialization\"]")).Text;
-            var cardInfo = JsonMapper.ToObject(cardInfoJson)["card"];
+            var result = JsonMapper.ToObject<TwitterCardsSerialization>(cardInfoJson).card;
 
-            if (!Regex.IsMatch((string)cardInfo["card_name"], "poll[234]choice_text_only"))
+            if (!Regex.IsMatch(result.card_name, "poll[234]choice_text_only"))
                 return null;
 
-            var result = JsonMapper.ToObject<DetailedPollInfo>(cardInfo.ToJson());
+            result.card_name = null;
+            result.EndTimeDateTime = DateTimeOffset.Parse(result.end_time);
 
             result.choices = dom.GetElementsByClassName("PollXChoiceTextOnly-choice--text")
                 .Select(x => x.TextContent).ToArray();
