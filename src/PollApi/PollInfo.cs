@@ -16,10 +16,15 @@ namespace PollApi
         public string[] choices;
         public int? total;
         public int[] percentages;
-        public int? count1;
-        public int? count2;
+        [JsonIgnore]
+        public int count1;
+        [JsonIgnore]
+        public int count2;
+        [JsonIgnore]
         public int? count3;
+        [JsonIgnore]
         public int? count4;
+        public int[] counts;
 
         public PollInfo GetInvariantData()
         {

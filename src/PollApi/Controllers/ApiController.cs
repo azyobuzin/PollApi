@@ -116,6 +116,11 @@ namespace PollApi.Controllers
 
             result.card_name = null;
             result.EndTimeDateTime = DateTimeOffset.Parse(result.end_time);
+            result.counts = result.count3.HasValue
+                ? (result.count4.HasValue
+                    ? new[] { result.count1, result.count2, result.count3.Value, result.count4.Value }
+                    : new[] { result.count1, result.count2, result.count3.Value })
+                : new[] { result.count1, result.count2 };
 
             // <div class="TwitterCardsGrid-col--12 TwitterCard-container PollXChoiceTextOnly">
             var container = grid.ChildNodes.OfType<IHtmlDivElement>().First().ChildNodes.OfType<IHtmlDivElement>().First();
@@ -130,6 +135,7 @@ namespace PollApi.Controllers
 
             Debug.Assert(ulong.Parse(result.tweet_id) == id);
             Debug.Assert(result.choices.Length == result.choice_count);
+            Debug.Assert(result.counts.Length == result.choice_count);
 
             return result;
         }
