@@ -5,7 +5,7 @@
   },
 
   "dependencies": {
-    "AngleSharp": "",
+    "AngleSharp": "0.9.4-dnx",
     "Microsoft.ApplicationInsights.AspNet": "1.0.0-rc1",
     "Microsoft.AspNet.Cors": "6.0.0-rc1-final",
     "Microsoft.AspNet.Diagnostics": "1.0.0-rc1-final",
