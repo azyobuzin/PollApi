@@ -3,12 +3,23 @@ using Newtonsoft.Json;
 
 namespace PollApi
 {
+    // 闇深くなってきたので、シリアライズとデシリアライズの型分けよう！いつか
     public class PollInfo
     {
         [JsonIgnore]
         public string card_name;
         public int choice_count;
+        [JsonIgnore]
         public string is_open;
+        [JsonProperty("is_open")]
+        public bool? BoolIsOpen
+        {
+            get
+            {
+                bool x;
+                return bool.TryParse(this.is_open, out x) ? (bool?)x : null;
+            }
+        }
         public string end_time;
         [JsonIgnore]
         public DateTimeOffset EndTimeDateTime;

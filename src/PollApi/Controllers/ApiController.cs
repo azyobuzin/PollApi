@@ -69,9 +69,9 @@ namespace PollApi.Controllers
 
         private static int ReadInt(string s)
         {
-            var m = Regex.Match(s, "[0-9]+");
+            var m = Regex.Match(s, "[0-9,]+");
             if (!m.Success) throw new FormatException();
-            return int.Parse(m.Value, CultureInfo.InvariantCulture);
+            return int.Parse(m.Value.Replace(",", ""), CultureInfo.InvariantCulture);
         }
 
         private class TwitterCardsSerialization
