@@ -63,7 +63,7 @@ namespace PollApi.Controllers
             this._cache.Set(id, pollInfo, s_defaultOptions);
             return this.Json(pollInfo);
 
-            NotFound:
+        NotFound:
             return this.HttpNotFound("Not a poll tweet.");
         }
 
@@ -106,7 +106,7 @@ namespace PollApi.Controllers
 
             var dom = new HtmlParser().Parse(html);
 
-            // <div class="TwitterCardsGrid TwitterCard">
+            // <div class="TwitterCardsGrid TwitterCard TwitterCard--animation">
             var grid = dom.Body.ChildNodes.OfType<IHtmlDivElement>().First();
             var cardInfoJson = grid.ChildNodes.OfType<IHtmlScriptElement>().First().Text;
             var result = JsonMapper.ToObject<TwitterCardsSerialization>(cardInfoJson).card;
@@ -122,15 +122,18 @@ namespace PollApi.Controllers
                     : new[] { result.count1, result.count2, result.count3.Value })
                 : new[] { result.count1, result.count2 };
 
-            // <div class="TwitterCardsGrid-col--12 TwitterCard-container PollXChoiceTextOnly">
-            var container = grid.ChildNodes.OfType<IHtmlDivElement>().First().ChildNodes.OfType<IHtmlDivElement>().First();
+            // <div class="TwitterCardsGrid-col--12 PollXChoice-optionsWrapper">
+            var optionsWrapper = grid.ChildNodes.OfType<IHtmlDivElement>().First().ChildNodes.OfType<IHtmlDivElement>().First()
+                .ChildNodes.OfType<IHtmlDivElement>().First().ChildNodes.OfType<IHtmlDivElement>().First();
 
-            result.choices = container.GetElementsByClassName("PollXChoiceTextOnly-choice--text")
-                .Select(x => x.TextContent).ToArray();
+            result.choices = optionsWrapper.GetElementsByClassName("PollXChoice-choice--text")
+                .Select(x => x.ChildNodes.OfType<IHtmlSpanElement>().ElementAt(1).TextContent)
+                .ToArray();
 
-            result.total = ReadInt(container.GetElementsByClassName("PollXChoiceTextOnly-footer--total")[0].TextContent);
+            result.total = ReadInt(optionsWrapper.ChildNodes.OfType<IHtmlDivElement>().Last()
+                .GetElementsByClassName("PollXChoice-footer--total")[0].TextContent);
 
-            result.percentages = container.GetElementsByClassName("PollXChoiceTextOnly-progress")
+            result.percentages = optionsWrapper.GetElementsByClassName("PollXChoice-progress")
                 .Select(x => ReadInt(x.TextContent)).ToArray();
 
             Debug.Assert(ulong.Parse(result.tweet_id) == id);
